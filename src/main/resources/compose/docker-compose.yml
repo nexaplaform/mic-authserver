@@ -1,0 +1,15 @@
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongo-api-gateway
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: authserver
+      MONGO_INITDB_ROOT_PASSWORD: pauthserver
+      MONGO_INITDB_DATABASE: authserver
+    ports:
+      - "27020:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/roles.js:ro
+volumes:
+  mongodb_data:
