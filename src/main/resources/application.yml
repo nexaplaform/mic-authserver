@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: mic-authserver
+
+  profiles:
+    active: ${PROFILE:local}
+
+server:
+    port: 9001
