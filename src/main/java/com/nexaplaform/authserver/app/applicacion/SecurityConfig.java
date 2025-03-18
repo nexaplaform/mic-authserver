@@ -53,8 +53,8 @@ public class SecurityConfig {
                         authorizationServer.oidc(Customizer.withDefaults())    // Enable OpenID Connect 1.0
                 )
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/actuator/**").permitAll() // Permitir acceso a Actuator
-                        .requestMatchers("/oauth2/**").permitAll() // Permitir acceso a endpoints OAuth2
+                        //.requestMatchers("/actuator/**").permitAll() // Permitir acceso a Actuator
+                        //.requestMatchers("/oauth2/**").permitAll() // Permitir acceso a endpoints OAuth2
                         .anyRequest().authenticated()
                 )
                 // Redirect to the login page when not authenticated from the
@@ -72,8 +72,8 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/actuator/**").permitAll() // Permitir acceso a Actuator
-                        .requestMatchers("/oauth2/**").permitAll() // Permitir acceso a endpoints OAuth2
+                        //.requestMatchers("/actuator/**").permitAll() // Permitir acceso a Actuator
+                        //.requestMatchers("/oauth2/**").permitAll() // Permitir acceso a endpoints OAuth2
                         .anyRequest().authenticated()
                 )
                 // Form login handles the redirect to the login page from the
@@ -84,10 +84,10 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        UserDetails userDetails = User.withDefaultPasswordEncoder()
-                .username("user")
-                .password("password")
-                .roles("USER")
+        UserDetails userDetails = User.withUsername("user")
+                //.username("user")
+                .password("{noop}password")
+                //.roles("USER")
                 .build();
         return new InMemoryUserDetailsManager(userDetails);
     }
@@ -95,19 +95,31 @@ public class SecurityConfig {
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
         RegisteredClient oidcClient = RegisteredClient.withId(UUID.randomUUID().toString())
-                .clientId("oidc-client")
+                .clientId("client")
                 .clientSecret("{noop}secret")
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                .redirectUri("http://127.0.0.1:8080/login/oauth2/code/oidc-client")
-                .postLogoutRedirectUri("http://127.0.0.1:8080/")
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .redirectUri("https://oauthdebugger.com/debug")
+                //.postLogoutRedirectUri("http://127.0.0.1:8080/")
                 .scope(OidcScopes.OPENID)
-                .scope(OidcScopes.PROFILE)
-                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
+                //.scope(OidcScopes.PROFILE)
+                .clientSettings(getClientSettings())
                 .build();
 
         return new InMemoryRegisteredClientRepository(oidcClient);
+    }
+
+    private static ClientSettings getClientSettings() {
+        return ClientSettings.builder().requireProofKey(true).build();
+    }
+
+    @Bean
+    public AuthorizationServerSettings authorizationServerSettings() {
+        return AuthorizationServerSettings.builder()
+                .issuer("http://localhost:9001")
+                .build();
     }
 
     @Bean
@@ -140,8 +152,5 @@ public class SecurityConfig {
         return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
     }
 
-    @Bean
-    public AuthorizationServerSettings authorizationServerSettings() {
-        return AuthorizationServerSettings.builder().build();
-    }
+
 }
