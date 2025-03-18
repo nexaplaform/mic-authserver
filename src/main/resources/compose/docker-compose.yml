@@ -1,15 +1,31 @@
+version: '3.8'
+
 services:
-  mongodb:
-    image: mongo:latest
-    container_name: mongo-api-gateway
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres_mic_authorization
+    restart: on-failure
     environment:
-      MONGO_INITDB_ROOT_USERNAME: authserver
-      MONGO_INITDB_ROOT_PASSWORD: pauthserver
-      MONGO_INITDB_DATABASE: authserver
+      POSTGRES_USER: ${POSTGRES_AUTH_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_AUTH_PASSWORD}
+      POSTGRES_DB: micautorization
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
     ports:
-      - "27020:27017"
+      - "5434:5432"
     volumes:
-      - mongodb_data:/data/db
-      - ./init-mongo.js:/docker-entrypoint-initdb.d/roles.js:ro
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_AUTH_USER} -d micautorization"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - postgres_network
+
 volumes:
-  mongodb_data:
+  postgres_data:
+    driver: local
+
+networks:
+  postgres_network:
+    driver: bridge

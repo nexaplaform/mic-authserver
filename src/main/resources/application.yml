@@ -1,9 +1,9 @@
 spring:
   application:
     name: mic-authserver
-  data:
-    mongodb:
-      uri: ${MONGO_URI}
+
+  profiles:
+    active: ${PROFILE:local}
 
 server:
     port: 9001
